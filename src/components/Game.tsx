@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MineField } from './MineField';
-import { Timer } from './Timer';
 import { game } from '../gameLogic/game';
 import { Game as GameType, Mine } from '../gameLogic/gameDomain';
+import { time } from '../util/time';
+import { GameControls, DifficultyLevel, DIFFICULTY } from './GameControls';
+import { GameHeader } from './GameHeader';
 
 interface GameProps {
   initialRows: number;
@@ -11,31 +13,22 @@ interface GameProps {
   initialDifficulty: DifficultyLevel;
 }
 
-// Define difficulty levels with enum for type safety
-enum DifficultyLevel {
-  EASY = 'EASY',
-  MEDIUM = 'MEDIUM',
-  HARD = 'HARD'
-}
-
-// Game difficulty presets
-const DIFFICULTY = {
-  [DifficultyLevel.EASY]: { rows: 9, cols: 9, mines: 10 },
-  [DifficultyLevel.MEDIUM]: { rows: 16, cols: 16, mines: 40 },
-  [DifficultyLevel.HARD]: { rows: 16, cols: 30, mines: 99 }
-};
-
-const Game: React.FC<GameProps> = ({ initialRows, initialCols, initialMines }) => {
+const Game: React.FC<GameProps> = ({ 
+  initialRows, 
+  initialCols, 
+  initialMines,
+  initialDifficulty 
+}) => {
+  // Game state
   const [gameState, setGameState] = useState<GameType>(
     game.newGame(initialRows, initialCols, initialMines)
   );
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [flaggedCount, setFlaggedCount] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [rows, setRows] = useState<number>(initialRows);
-  const [cols, setColumns] = useState<number>(initialCols);
-  const [mines, setMines] = useState<number>(initialMines);
-  const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>(DifficultyLevel.EASY);
+  
+  // Configuration state
+  const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>(initialDifficulty);
 
   // Timer logic
   useEffect(() => {
@@ -72,65 +65,52 @@ const Game: React.FC<GameProps> = ({ initialRows, initialCols, initialMines }) =
     setGameState(prev => game.markMine(prev, field));
   }, [isCompleted, gameState.isOver]);
 
+  // Start a new game with a specific difficulty
   const startNewGame = useCallback((difficulty: DifficultyLevel) => {
     const config = DIFFICULTY[difficulty];
     const { rows: newRows, cols: newCols, mines: newMines } = config;
     
     setCurrentDifficulty(difficulty);
-    setRows(newRows);
-    setColumns(newCols);
-    setMines(newMines);
     setGameState(game.newGame(newRows, newCols, newMines));
     setIsCompleted(false);
     setFlaggedCount(0);
     setElapsedSeconds(0);
   }, []);
 
+  // Reset the game with current difficulty
+  const resetGame = useCallback(() => {
+    startNewGame(currentDifficulty);
+  }, [currentDifficulty, startNewGame]);
+
+  // Format the time for display
+  const formattedTime = time.timer(elapsedSeconds);
+  
+  // Check if game is over (either won or lost)
+  const isGameOver = isCompleted || gameState.isOver;
+
   return (
     <div>
-      <header className="App-header">
-        <span className="status"> Flags: {flaggedCount}/{gameState.totBombs} </span><h1 className="game-title">Minesweeper</h1>
-      </header>
+      <GameHeader
+        flagCount={flaggedCount}
+        totalBombs={gameState.totBombs}
+        elapsedTime={elapsedSeconds}
+        formattedTime={formattedTime}
+      />
+      
       <div className="game">
-        <div className="menu">
-          <ul className="level-menu">
-            <li 
-              className={currentDifficulty === DifficultyLevel.EASY ? 'active' : ''} 
-              onClick={() => startNewGame(DifficultyLevel.EASY)}
-            >
-              Easy (9×9, 10 mines)
-            </li>
-            <li 
-              className={currentDifficulty === DifficultyLevel.MEDIUM ? 'active' : ''} 
-              onClick={() => startNewGame(DifficultyLevel.MEDIUM)}
-            >
-              Medium (16×16, 40 mines)
-            </li>
-            <li 
-              className={currentDifficulty === DifficultyLevel.HARD ? 'active' : ''} 
-              onClick={() => startNewGame(DifficultyLevel.HARD)}
-            >
-              Hard (16×30, 99 mines)
-            </li>
-          </ul>
-        </div>
+        <GameControls
+          currentDifficulty={currentDifficulty}
+          isGameOver={isGameOver}
+          onNewGame={startNewGame}
+          onReset={resetGame}
+        />
+        
         <MineField
           game={gameState}
           onLeftClick={handleLeftClick}
           onRightClick={handleRightClick}
         />
-        <Timer secPassed={elapsedSeconds} />
-        <div className="status">
-          Completed: {isCompleted ? 'YES' : 'NO'}
-          {gameState.isOver && ' - Game Over!'}
-        </div>
-        <div className="help">
-          <h3>How to play</h3>
-          <ol>
-            <li>Left Click to reveal a cell</li>
-            <li>Right Click to place/remove a flag</li>
-          </ol>
-        </div>
+
       </div>
     </div>
   );

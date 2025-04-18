@@ -13,10 +13,47 @@
   margin-bottom: 20px;
 }
 
-.App-header h1 {
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.game-title {
   color: #FBEBF1;
   margin: 0;
   font-size: 2rem;
+}
+
+.timer-display {
+  color: #FBEBF1;
+  position: absolute;
+  right: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-family: monospace;
+}
+
+.flag-counter {
+  color: #FBEBF1;
+  position: absolute;
+  left: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.flag-icon {
+  font-size: 1.3rem;
 }
 
 /* Game styles */
@@ -24,7 +61,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: #e3cfd6;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -41,7 +78,7 @@
   overflow: hidden;
   background-color: #C91051;
   margin: 0 0 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   justify-content: center;
 }
@@ -78,7 +115,7 @@
 }
 
 .mine-button {
-  background: #eee;
+  background: #fcf3f6;
   border: 1px solid #999;
   float: left;
   font-size: 18px;
@@ -125,6 +162,23 @@
 
 .help ol {
   margin-bottom: 0;
+}
+
+.reset-button {
+  margin: 15px 0;
+  padding: 10px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background-color: #C91051;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #67082A;
 }
 
 /* Bomb number colors */
