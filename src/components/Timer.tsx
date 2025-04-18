@@ -7,8 +7,6 @@ export interface TimerProps {
 
 export const Timer: React.FC<TimerProps> = ({ secPassed }) => {
     return (
-        <div className="timer">
-            <h4>Time: {time.timer(secPassed)}</h4>
-        </div>
+        <div className="timer-display">{time.timer(secPassed)}</div>
     );
 };
