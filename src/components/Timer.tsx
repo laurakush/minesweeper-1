@@ -5,6 +5,10 @@ export interface TimerProps {
     secPassed: number;
 }
 
-export const Timer = (props: TimerProps) => (
-    <h4>{time.timer(props.secPassed)}</h4>
-);
+export const Timer: React.FC<TimerProps> = ({ secPassed }) => {
+    return (
+        <div className="timer">
+            <h4>Time: {time.timer(secPassed)}</h4>
+        </div>
+    );
+};
