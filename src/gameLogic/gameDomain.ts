@@ -22,7 +22,10 @@ export class Mine {
 export class Game {
     constructor(public state: Array<Array<Mine>>,
         public isOver = false, 
-        public totBombs = 0
+        public totBombs = 0,
+        public openedCells = 0,
+        public flaggedCells = 0
+        
     ){
     }
 }
