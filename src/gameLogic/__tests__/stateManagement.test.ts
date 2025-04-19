@@ -80,31 +80,42 @@ describe('Minesweeper State Management', () => {
     });
   });
   
-  // This test was likely causing the infinite loop - Let's fix it
-  describe('Win Condition - Safe Version', () => {
-    it('should detect a win condition in a controlled game state', () => {
-      // Instead of relying on the game logic to generate mines,
-      // we'll create a controlled game state where we know exactly where the mine is
-      
-      // Create a 2x2 game board with a mine at (0,0)
+  // This fixed test should resolve the infinite loop issue
+  describe('Win Condition - Fixed Version', () => {
+    it('should correctly detect a win condition', () => {
+      // Create a very simple 2x1 board with one mine
+      // We'll manually create the state rather than using game.newGame
       const state: Mine[][] = [
-        [createMine(0, 0, -1, false, true)],  // Mine, flagged
-        [createMine(1, 0, 1, true, false)]    // Non-mine, opened
+        [createMine(0, 0, -1, false, true)],  // Mine at 0,0 (flagged)
+        [createMine(1, 0, 1, true, false)]    // Non-mine at 1,0 (opened)
       ];
       
-      // Create a game with this state - 1 mine, 1 opened cell
-      const controlledGame = new Game(state, false, 1, 1, 1, false);
+      // Create a game with known state - 1 mine, 1 opened cell, 1 flagged
+      const gameState = new Game(
+        state,      // board state
+        false,      // isOver (we'll test this)
+        1,          // totBombs
+        1,          // openedCells
+        1,          // flaggedCells
+        false       // isWon (we'll test this)
+      );
       
-      // Verify the game is not yet won
-      expect(game.isCompleted(controlledGame)).toBe(false);
+      // First, check that it's not yet completed
+      // This is because isOver and isWon are both false
+      expect(game.isCompleted(gameState)).toBe(false);
       
-      // Now let's manually update the state to represent a win condition
-      // In a real game, this would happen through the game logic
-      const winState = JSON.parse(JSON.stringify(state));
-      const winGame = new Game(winState, true, 1, 1, 1, true);
+      // Now create a "won" version of the game
+      const wonGameState = new Game(
+        state,     // same board state
+        true,      // isOver = true
+        1,         // totBombs
+        1,         // openedCells
+        1,         // flaggedCells
+        true       // isWon = true
+      );
       
-      // Verify the game is now won
-      expect(game.isCompleted(winGame)).toBe(true);
+      // Check that this is considered completed
+      expect(game.isCompleted(wonGameState)).toBe(true);
     });
   });
 });

@@ -334,7 +334,7 @@ export const game = {
     newGame,
     fillBombsCount,
     countFlagged,
-    isCompleted: (game: Game) => game.isOver && game.isWon, // Simplified completion check
+    isCompleted: (game: Game) => game.isOver && game.isWon, 
     markMine: toggleFlag,
     openMine: openCell
 };
