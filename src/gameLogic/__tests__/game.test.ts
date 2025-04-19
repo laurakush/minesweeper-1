@@ -59,24 +59,22 @@ describe('Game Logic', () => {
     });
 
     it('should not open a flagged cell', () => {
-      // Create a game with one opened cell (to simulate game in progress)
-      const initialGame = createTestGame(5, 5, 5);
-      const firstCell = initialGame.state[0][0];
-      const gameInProgress = game.openMine(initialGame, firstCell);
-      
-      // Flag a cell
-      const cellToFlag = gameInProgress.state[1][1];
-      const gameWithFlag = game.markMine(gameInProgress, cellToFlag);
-      
-      // Ensure cell is flagged
-      expect(gameWithFlag.state[1][1].isFlagged).toBe(true);
-      
-      // Try to open the flagged cell
-      const updatedGame = game.openMine(gameWithFlag, cellToFlag);
-      
-      // The cell should remain closed
-      expect(updatedGame.state[1][1].isOpened).toBe(false);
-    });
+        // Create a test game (3x3 board with 1 mine)
+        const testGame = createTestGame(3, 3, 1);
+        
+        // Flag the cell at position [1][1]
+        const cellToFlag = testGame.state[1][1];
+        const gameWithFlag = game.markMine(testGame, cellToFlag);
+        
+        // Verify the cell is flagged
+        expect(gameWithFlag.state[1][1].isFlagged).toBe(true);
+        
+        // Try to open the flagged cell
+        const updatedGame = game.openMine(gameWithFlag, gameWithFlag.state[1][1]);
+        
+        // The cell should remain closed
+        expect(updatedGame.state[1][1].isOpened).toBe(false);
+      });
     
     it('should end the game when a mine is clicked', () => {
       // Create a game with one opened cell (to simulate game in progress)

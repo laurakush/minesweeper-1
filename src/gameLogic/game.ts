@@ -194,7 +194,7 @@ function handleFirstClick(game: Game, field: Mine): Game {
 // Opens a cell on the board
 function openCell(game: Game, field: Mine): Game {
     // Skip if game is already over, or cell is already opened or flagged
-    if (game.isOver || field.isFlagged || field.isOpened) return game;
+    if (game.isOver || field.isOpened || field.isFlagged) return game;
     
     // Check if this is the first click
     const isFirstClick = game.openedCells === 0 && !game.state.some(row => 
@@ -247,7 +247,6 @@ function openCell(game: Game, field: Mine): Game {
     return checkGameStatus(updatedGame);
 }
 
-// Recursively opens empty cells
 function openEmptyCells(board: Array<Array<Mine>>, startCell: Mine): number {
     const visited = new Set<string>();
     const queue: Mine[] = [startCell];
@@ -257,6 +256,7 @@ function openEmptyCells(board: Array<Array<Mine>>, startCell: Mine): number {
         const cell = queue.shift()!;
         const key = `${cell.pos.x},${cell.pos.y}`;
         
+        // Skip if already visited
         if (visited.has(key)) continue;
         visited.add(key);
         
@@ -265,10 +265,12 @@ function openEmptyCells(board: Array<Array<Mine>>, startCell: Mine): number {
             cellsOpened++;
         }
         
-        // If cell has no adjacent mines, explore neighbors
+        // Only explore neighbors for empty cells
         if (cell.bombs === 0) {
+            // Add unvisited neighbors to the queue
             traverseNeighbors(board, cell, (neighbor) => {
-                if (!neighbor.isOpened && !neighbor.isFlagged && !isMine(neighbor)) {
+                const neighborKey = `${neighbor.pos.x},${neighbor.pos.y}`;
+                if (!visited.has(neighborKey) && !neighbor.isOpened && !neighbor.isFlagged) {
                     queue.push(neighbor);
                 }
             });
@@ -292,6 +294,7 @@ function toggleFlag(game: Game, field: Mine): Game {
         game.flaggedCells + 1 : 
         game.flaggedCells - 1;
     
+
     // Create updated game state
     return new Game(
         newState, 
