@@ -12,7 +12,7 @@ export const MineField: React.FC<BoardProps> = ({ game, onLeftClick, onRightClic
     return (
         <div className="game-board">
             {game.state.map((row, i) => (
-                <div key={i} className="board-row">
+                <div key={i} className="board-row" data-testid="board-row">
                     {row.map((field, j) => (
                         <MineCell 
                             key={`${i}-${j}`}

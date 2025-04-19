@@ -1,5 +1,5 @@
 import * as React from "react";
-import { time } from "../util/time";
+import { time } from "../gameLogic/time";
 
 export interface TimerProps {
     secPassed: number;
