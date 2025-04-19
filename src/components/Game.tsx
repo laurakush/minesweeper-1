@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MineField } from './MineField';
 import { game } from '../gameLogic/game';
 import { Game as GameType, Mine } from '../gameLogic/gameDomain';
-import { time } from '../util/time';
+import { time } from '../gameLogic/time';
 import { GameControls, DifficultyLevel, DIFFICULTY } from './GameControls';
 import { GameHeader } from './GameHeader';
+import '../styles/Game.css';
 
 interface GameProps {
   initialRows: number;
