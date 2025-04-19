@@ -23,41 +23,16 @@ const Game: React.FC<GameProps> = ({
   const [gameState, setGameState] = useState<GameType>(
     game.newGame(initialRows, initialCols, initialMines)
   );
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [flaggedCount, setFlaggedCount] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   
   // Configuration state
   const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>(initialDifficulty);
 
-  // Function to check for win state by examining the game board directly
-  const checkWin = (gameState: GameType): boolean => {
-    // If a mine has exploded, it's not a win
-    if (gameState.isOver) {
-      return false;
-    }
-    
-    // Check if all non-mine cells are opened
-    for (let i = 0; i < gameState.state.length; i++) {
-      for (let j = 0; j < gameState.state[i].length; j++) {
-        const cell = gameState.state[i][j];
-        
-        // If we find a non-mine cell that's not opened, game is not won
-        if (cell.bombs !== -1 && !cell.isOpened) {
-          return false;
-        }
-      }
-    }
-    
-    // All non-mine cells are opened and no mine exploded
-    return true;
-  };
-
   // Timer logic
   useEffect(() => {
-    // Use our own win check instead of isCompleted
-    const winState = checkWin(gameState);
-    if (winState || gameState.isOver) return;
+    // Stop timer if game is over (win or loss)
+    if (gameState.isOver) return;
 
     const timerId = setInterval(() => {
       setElapsedSeconds(prev => prev + 1);
@@ -66,27 +41,23 @@ const Game: React.FC<GameProps> = ({
     return () => clearInterval(timerId);
   }, [gameState]);
 
-  // Check game status after each move
+  // Update state after each move
   useEffect(() => {
-    const completed = game.isCompleted(gameState);
-    setIsCompleted(completed);
     setFlaggedCount(game.countFlagged(gameState));
   }, [gameState]);
 
   // Left click handler - reveal cell
   const handleLeftClick = useCallback((field: Mine) => {
-    // Use our own win check instead of isCompleted
-    const winState = checkWin(gameState);
-    if (winState || gameState.isOver) return;
+    // Skip if game is already over
+    if (gameState.isOver) return;
     
     setGameState(prev => game.openMine(prev, field));
   }, [gameState]);
 
   // Right click handler - toggle flag
   const handleRightClick = useCallback((field: Mine, e: React.MouseEvent) => {
-    // Use our own win check instead of isCompleted
-    const winState = checkWin(gameState);
-    if (winState || gameState.isOver) return;
+    // Skip if game is already over
+    if (gameState.isOver) return;
     
     // Prevent context menu from showing
     e.preventDefault();
@@ -101,7 +72,6 @@ const Game: React.FC<GameProps> = ({
     
     setCurrentDifficulty(difficulty);
     setGameState(game.newGame(newRows, newCols, newMines));
-    setIsCompleted(false);
     setFlaggedCount(0);
     setElapsedSeconds(0);
   }, []);
@@ -113,10 +83,6 @@ const Game: React.FC<GameProps> = ({
 
   // Format the time for display
   const formattedTime = time.timer(elapsedSeconds);
-  
-  // Use our own win detection instead of relying on isCompleted
-  const isWin = checkWin(gameState);
-  const isGameOver = isWin || gameState.isOver;
 
   return (
     <div>
@@ -130,7 +96,7 @@ const Game: React.FC<GameProps> = ({
       <div className="game">
         <GameControls
           currentDifficulty={currentDifficulty}
-          isGameOver={isGameOver}
+          isGameOver={gameState.isOver}
           onNewGame={startNewGame}
           onReset={resetGame}
         />
@@ -141,13 +107,16 @@ const Game: React.FC<GameProps> = ({
           onRightClick={handleRightClick}
         />
 
-        {isGameOver && (
-          <div className={`game-result ${isWin ? 'win' : 'lose'}`}>
-            {isWin ? 
+        {gameState.isOver && (
+          <div className={`game-result ${gameState.isWon ? 'win' : 'lose'}`}>
+            {gameState.isWon ? 
               <h2>🎉 You Win! 🎉</h2> : 
               <h2>💥 Game Over! 💥</h2>
             }
-            <p>{isWin ? `You completed the game in ${formattedTime}!` : 'Better luck next time!'}</p>
+            <p>{gameState.isWon ? 
+                 `You completed the game in ${formattedTime}!` : 
+                 'Better luck next time!'}
+            </p>
           </div>
         )}
       </div>
