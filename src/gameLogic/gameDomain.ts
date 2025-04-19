@@ -21,11 +21,11 @@ export class Mine {
 // Represents the game as a matrix of Mines
 export class Game {
     constructor(public state: Array<Array<Mine>>,
-        public isOver = false, 
+        public isOver = false,  // true when game ends (either win or loss)
         public totBombs = 0,
         public openedCells = 0,
-        public flaggedCells = 0
-        
+        public flaggedCells = 0,
+        public isWon = false    // specific flag for win condition
     ){
     }
 }

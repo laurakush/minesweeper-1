@@ -11,12 +11,12 @@ const dy = [-1, -1, -1, 0, 0, 1, 1, 1];
 // Utility Functions
 // ==============================
 
-//Checks if a cell contains a mine
+// Checks if a cell contains a mine
 function isMine(mine: Mine): boolean {
     return mine.bombs === MINE;
 }
 
-//Creates a deep copy of the game board
+// Creates a deep copy of the game board
 function createDeepCopy(state: Array<Array<Mine>>): Array<Array<Mine>> {
     return state.map(row => 
         row.map(cell => 
@@ -30,7 +30,7 @@ function createDeepCopy(state: Array<Array<Mine>>): Array<Array<Mine>> {
     );
 }
 
-//Performs an operation on all neighboring cells of a given cell
+// Performs an operation on all neighboring cells of a given cell
 function traverseNeighbors(board: Mine[][], mine: Mine, callback: (field: Mine) => void): void {
     const { x, y } = mine.pos;
     
@@ -49,7 +49,7 @@ function traverseNeighbors(board: Mine[][], mine: Mine, callback: (field: Mine) 
 // Board Generation Functions
 // ==============================
 
-//Creates an empty board with no mines
+// Creates an empty board with no mines
 function createEmptyBoard(rows: number, cols: number): Array<Array<Mine>> {
     const board: Mine[][] = [];
 
@@ -99,7 +99,7 @@ function placeMines(board: Array<Array<Mine>>, firstClickPos: Point, totalMines:
     fillBombsCount(board);
 }
 
-//Calculates the number of adjacent mines for each cell
+// Calculates the number of adjacent mines for each cell
 function fillBombsCount(board: Array<Array<Mine>>): void {
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
@@ -124,14 +124,43 @@ function fillBombsCount(board: Array<Array<Mine>>): void {
 // Creates a new empty game (no mines placed yet)
 function newGame(rows: number, cols: number, mines: number): Game {
     const board = createEmptyBoard(rows, cols);
-    return new Game(board, false, mines);
+    return new Game(board, false, mines, 0, 0, false);
+}
+
+// ==============================
+// Game Status Check
+// ==============================
+
+// Check if the game is completed (win condition)
+function checkGameStatus(game: Game): Game {
+    // If already over (lost), don't change anything
+    if (game.isOver && !game.isWon) return game;
+    
+    // Calculate win condition - all non-mine cells are opened
+    const totalCells = game.state.length * game.state[0].length;
+    const nonMineCells = totalCells - game.totBombs;
+    const isWon = game.openedCells === nonMineCells;
+    
+    // Return updated game with win state if won
+    if (isWon) {
+        return new Game(
+            game.state, 
+            true,           // Game is over
+            game.totBombs, 
+            game.openedCells, 
+            game.flaggedCells,
+            true            // Game is won
+        );
+    }
+    
+    return game;
 }
 
 // ==============================
 // Game Action Functions
 // ==============================
 
-//Handles the first click in a game
+// Handles the first click in a game
 function handleFirstClick(game: Game, field: Mine): Game {
     // Create a deep copy of the board
     const newState = createDeepCopy(game.state);
@@ -142,18 +171,30 @@ function handleFirstClick(game: Game, field: Mine): Game {
     // Open the clicked cell and surrounding cells if it's a 0
     const clickedCell = newState[field.pos.x][field.pos.y];
     clickedCell.isOpened = true;
+    let openedCount = 1; // Count the clicked cell
     
     if (clickedCell.bombs === 0) {
-        openEmptyCells(newState, clickedCell);
+        openedCount += openEmptyCells(newState, clickedCell);
     }
     
-    return new Game(newState, false, game.totBombs);
+    // Create updated game state
+    const updatedGame = new Game(
+        newState, 
+        false, 
+        game.totBombs, 
+        openedCount, 
+        game.flaggedCells,
+        false
+    );
+    
+    // Check if this move won the game
+    return checkGameStatus(updatedGame);
 }
 
 // Opens a cell on the board
 function openCell(game: Game, field: Mine): Game {
-    // Skip if cell is already opened or flagged
-    if (field.isFlagged || field.isOpened) return game;
+    // Skip if game is already over, or cell is already opened or flagged
+    if (game.isOver || field.isFlagged || field.isOpened) return game;
     
     // Check if this is the first click
     const isFirstClick = game.openedCells === 0 && !game.state.some(row => 
@@ -169,10 +210,17 @@ function openCell(game: Game, field: Mine): Game {
     const newState = createDeepCopy(game.state);
     const clickedCell = newState[field.pos.x][field.pos.y];
     
-    // If mine, game over
+    // If mine, game over with loss
     if (isMine(clickedCell)) {
         revealAllMines(newState);
-        return new Game(newState, true, game.totBombs, game.openedCells, game.flaggedCells);
+        return new Game(
+            newState, 
+            true,           // Game is over
+            game.totBombs, 
+            game.openedCells, 
+            game.flaggedCells,
+            false           // Game is lost
+        );
     }
     
     // Open the cell and increment counter
@@ -181,16 +229,25 @@ function openCell(game: Game, field: Mine): Game {
     
     // If empty, open surrounding cells
     if (clickedCell.bombs === 0) {
-        // We'd need to track how many cells were opened in openEmptyCells
-        const openedCellsCount = openEmptyCells(newState, clickedCell);
-        newOpenedCount += openedCellsCount;
+        const additionalCellsOpened = openEmptyCells(newState, clickedCell);
+        newOpenedCount += additionalCellsOpened;
     }
     
-    return new Game(newState, false, game.totBombs, newOpenedCount, game.flaggedCells);
+    // Create updated game state
+    const updatedGame = new Game(
+        newState, 
+        false, 
+        game.totBombs, 
+        newOpenedCount, 
+        game.flaggedCells,
+        false
+    );
+    
+    // Check if this move won the game
+    return checkGameStatus(updatedGame);
 }
 
-
-//Recursively opens empty cells
+// Recursively opens empty cells
 function openEmptyCells(board: Array<Array<Mine>>, startCell: Mine): number {
     const visited = new Set<string>();
     const queue: Mine[] = [startCell];
@@ -221,9 +278,10 @@ function openEmptyCells(board: Array<Array<Mine>>, startCell: Mine): number {
     return cellsOpened;
 }
 
-//Toggles a flag on a cell
+// Toggles a flag on a cell
 function toggleFlag(game: Game, field: Mine): Game {
-    if (field.isOpened) return game;
+    // Skip if game is over or cell is already opened
+    if (game.isOver || field.isOpened) return game;
     
     const newState = createDeepCopy(game.state);
     const cell = newState[field.pos.x][field.pos.y];
@@ -234,28 +292,27 @@ function toggleFlag(game: Game, field: Mine): Game {
         game.flaggedCells + 1 : 
         game.flaggedCells - 1;
     
-    return new Game(newState, game.isOver, game.totBombs, game.openedCells, newFlaggedCount);
+    // Create updated game state
+    return new Game(
+        newState, 
+        game.isOver, 
+        game.totBombs, 
+        game.openedCells, 
+        newFlaggedCount,
+        game.isWon
+    );
 }
 
 // ==============================
 // Game State Functions
 // ==============================
 
-//Checks if the game is completed
-function checkCompleted(game: Game): boolean {
-    const totalCells = game.state.length * game.state[0].length;
-    const nonMineCells = totalCells - game.totBombs;
-    
-    // Game is complete if all non-mine cells are opened
-    return game.openedCells === nonMineCells;
-}
-
-//Counts the number of flagged cells
+// Counts the number of flagged cells
 function countFlagged(game: Game): number {
     return game.flaggedCells;
 }
 
-//Reveals all mines on the board (used when game is over)
+// Reveals all mines on the board (used when game is over)
 function revealAllMines(board: Array<Array<Mine>>): void {
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[i].length; j++) {
@@ -274,7 +331,7 @@ export const game = {
     newGame,
     fillBombsCount,
     countFlagged,
-    isCompleted: checkCompleted,
+    isCompleted: (game: Game) => game.isOver && game.isWon, // Simplified completion check
     markMine: toggleFlag,
     openMine: openCell
 };
