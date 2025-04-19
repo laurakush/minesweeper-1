@@ -30,16 +30,41 @@ const Game: React.FC<GameProps> = ({
   // Configuration state
   const [currentDifficulty, setCurrentDifficulty] = useState<DifficultyLevel>(initialDifficulty);
 
+  // Function to check for win state by examining the game board directly
+  const checkWin = (gameState: GameType): boolean => {
+    // If a mine has exploded, it's not a win
+    if (gameState.isOver) {
+      return false;
+    }
+    
+    // Check if all non-mine cells are opened
+    for (let i = 0; i < gameState.state.length; i++) {
+      for (let j = 0; j < gameState.state[i].length; j++) {
+        const cell = gameState.state[i][j];
+        
+        // If we find a non-mine cell that's not opened, game is not won
+        if (cell.bombs !== -1 && !cell.isOpened) {
+          return false;
+        }
+      }
+    }
+    
+    // All non-mine cells are opened and no mine exploded
+    return true;
+  };
+
   // Timer logic
   useEffect(() => {
-    if (isCompleted || gameState.isOver) return;
+    // Use our own win check instead of isCompleted
+    const winState = checkWin(gameState);
+    if (winState || gameState.isOver) return;
 
     const timerId = setInterval(() => {
       setElapsedSeconds(prev => prev + 1);
     }, 1000);
 
     return () => clearInterval(timerId);
-  }, [isCompleted, gameState.isOver]);
+  }, [gameState]);
 
   // Check game status after each move
   useEffect(() => {
@@ -50,20 +75,24 @@ const Game: React.FC<GameProps> = ({
 
   // Left click handler - reveal cell
   const handleLeftClick = useCallback((field: Mine) => {
-    if (isCompleted || gameState.isOver) return;
+    // Use our own win check instead of isCompleted
+    const winState = checkWin(gameState);
+    if (winState || gameState.isOver) return;
     
     setGameState(prev => game.openMine(prev, field));
-  }, [isCompleted, gameState.isOver]);
+  }, [gameState]);
 
   // Right click handler - toggle flag
   const handleRightClick = useCallback((field: Mine, e: React.MouseEvent) => {
-    if (isCompleted || gameState.isOver) return;
+    // Use our own win check instead of isCompleted
+    const winState = checkWin(gameState);
+    if (winState || gameState.isOver) return;
     
     // Prevent context menu from showing
     e.preventDefault();
     
     setGameState(prev => game.markMine(prev, field));
-  }, [isCompleted, gameState.isOver]);
+  }, [gameState]);
 
   // Start a new game with a specific difficulty
   const startNewGame = useCallback((difficulty: DifficultyLevel) => {
@@ -85,8 +114,9 @@ const Game: React.FC<GameProps> = ({
   // Format the time for display
   const formattedTime = time.timer(elapsedSeconds);
   
-  // Check if game is over (either won or lost)
-  const isGameOver = isCompleted || gameState.isOver;
+  // Use our own win detection instead of relying on isCompleted
+  const isWin = checkWin(gameState);
+  const isGameOver = isWin || gameState.isOver;
 
   return (
     <div>
@@ -111,6 +141,15 @@ const Game: React.FC<GameProps> = ({
           onRightClick={handleRightClick}
         />
 
+        {isGameOver && (
+          <div className={`game-result ${isWin ? 'win' : 'lose'}`}>
+            {isWin ? 
+              <h2>🎉 You Win! 🎉</h2> : 
+              <h2>💥 Game Over! 💥</h2>
+            }
+            <p>{isWin ? `You completed the game in ${formattedTime}!` : 'Better luck next time!'}</p>
+          </div>
+        )}
       </div>
     </div>
   );
