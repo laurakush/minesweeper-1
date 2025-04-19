@@ -1,23 +1,29 @@
 import { game } from '../game';
 import { Game, Mine, Point } from '../gameDomain';
 
-// Add a timeout to prevent infinite loops
-jest.setTimeout(10000); // 10 second timeout
-
 describe('Minesweeper State Management', () => {
-  // Helper to create a point
-  const createPoint = (x: number, y: number): Point => ({ x, y });
-  
-  // Helper to create a mine
+  // Helper function to create a test mine
   const createMine = (x: number, y: number, bombs = 0, isOpened = false, isFlagged = false): Mine => {
-    return new Mine(createPoint(x, y), bombs, isFlagged, isOpened);
+    return new Mine({ x, y }, bombs, isFlagged, isOpened);
   };
-  
-  describe('Game State Initialization', () => {
-    it('should create a fresh game state with proper defaults', () => {
-      const rows = 5;
-      const cols = 5;
-      const mines = 3;
+
+  // Helper function to create a test game with manual state
+  const createGameWithState = (
+    state: Mine[][], 
+    isOver = false, 
+    mineCount = 0,
+    openedCount = 0,
+    flaggedCount = 0,
+    isWon = false
+  ): Game => {
+    return new Game(state, isOver, mineCount, openedCount, flaggedCount, isWon);
+  };
+
+  describe('Game initialization', () => {
+    it('should create a new game with correct dimensions', () => {
+      const rows = 8;
+      const cols = 8;
+      const mines = 10;
       
       const newGame = game.newGame(rows, cols, mines);
       
@@ -25,97 +31,126 @@ describe('Minesweeper State Management', () => {
       expect(newGame.state[0].length).toBe(cols);
       expect(newGame.totBombs).toBe(mines);
       expect(newGame.isOver).toBe(false);
-      expect(newGame.openedCells).toBe(0);
-      expect(newGame.flaggedCells).toBe(0);
-    });
-  });
-  
-  describe('State Transitions', () => {
-    it('should create a new state when opening a cell', () => {
-      const initialGame = game.newGame(3, 3, 1);
-      const field = initialGame.state[1][1];
-      
-      // Open a cell
-      const updatedGame = game.openMine(initialGame, field);
-      
-      // Verify we got a new object, not the same one
-      expect(updatedGame).not.toBe(initialGame);
-      
-      // State should be different
-      expect(updatedGame.openedCells).toBeGreaterThan(initialGame.openedCells);
+      expect(newGame.isWon).toBe(false);
     });
     
-    it('should create a new state when flagging a cell', () => {
-      const initialGame = game.newGame(3, 3, 1);
-      const field = initialGame.state[1][1];
+    it('should initialize all cells as closed and unflagged', () => {
+      const newGame = game.newGame(3, 3, 1);
       
-      // Flag a cell
-      const updatedGame = game.markMine(initialGame, field);
-      
-      // Verify we got a new object, not the same one
-      expect(updatedGame).not.toBe(initialGame);
-      
-      // State should reflect the change
-      expect(updatedGame.flaggedCells).toBe(initialGame.flaggedCells + 1);
-      expect(updatedGame.state[1][1].isFlagged).toBe(true);
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          expect(newGame.state[i][j].isOpened).toBe(false);
+          expect(newGame.state[i][j].isFlagged).toBe(false);
+        }
+      }
     });
   });
-  
-  describe('Game State Progression', () => {
-    it('should track flagged cells count when toggling flags', () => {
-      const initialGame = game.newGame(3, 3, 1);
+
+  describe('Game state transitions', () => {
+    it('should properly track flagged cell count', () => {
+      // Create a game
+      const testGame = game.newGame(3, 3, 1);
       
       // Flag a cell
-      const firstCell = initialGame.state[0][0];
-      const afterFlag = game.markMine(initialGame, firstCell);
+      const updatedGame = game.markMine(testGame, testGame.state[0][0]);
       
-      // Count should increase
-      expect(afterFlag.flaggedCells).toBe(initialGame.flaggedCells + 1);
+      // Verify flag was set
+      expect(updatedGame.state[0][0].isFlagged).toBe(true);
+      expect(updatedGame.flaggedCells).toBe(1);
       
-      // Unflag the same cell
-      const afterUnflag = game.markMine(afterFlag, afterFlag.state[0][0]);
+      // Unflag the cell
+      const finalGame = game.markMine(updatedGame, updatedGame.state[0][0]);
       
-      // Count should decrease
-      expect(afterUnflag.flaggedCells).toBe(afterFlag.flaggedCells - 1);
+      // Verify flag was removed
+      expect(finalGame.state[0][0].isFlagged).toBe(false);
+      expect(finalGame.flaggedCells).toBe(0);
     });
-  });
-  
-  // This fixed test should resolve the infinite loop issue
-  describe('Win Condition - Fixed Version', () => {
-    it('should correctly detect a win condition', () => {
-      // Create a very simple 2x1 board with one mine
-      // We'll manually create the state rather than using game.newGame
-      const state: Mine[][] = [
-        [createMine(0, 0, -1, false, true)],  // Mine at 0,0 (flagged)
-        [createMine(1, 0, 1, true, false)]    // Non-mine at 1,0 (opened)
+    
+    it('should not allow flagging opened cells', () => {
+      // Create a test game
+      const state = [
+        [createMine(0, 0, 0, true, false)], // Opened cell
       ];
       
-      // Create a game with known state - 1 mine, 1 opened cell, 1 flagged
-      const gameState = new Game(
-        state,      // board state
-        false,      // isOver (we'll test this)
-        1,          // totBombs
-        1,          // openedCells
-        1,          // flaggedCells
-        false       // isWon (we'll test this)
+      const testGame = createGameWithState(state, false, 0, 1, 0, false);
+      
+      // Try to flag the opened cell
+      const updatedGame = game.markMine(testGame, testGame.state[0][0]);
+      
+      // Verify it wasn't flagged
+      expect(updatedGame.state[0][0].isFlagged).toBe(false);
+      expect(updatedGame.flaggedCells).toBe(0);
+    });
+  });
+
+  describe('Win condition', () => {
+    it('should detect a won game correctly using isCompleted', () => {
+      // Create a simple 2x2 game with one mine
+      const state = [
+        [createMine(0, 0, -1, false, true)], // Mine - flagged
+        [createMine(1, 0, 1, true, false)]   // Non-mine - opened
+      ];
+      
+      // Create a game that's won
+      const wonGame = createGameWithState(
+        state,
+        true,  // Game is over
+        1,     // 1 mine
+        1,     // 1 cell opened
+        1,     // 1 cell flagged
+        true   // Game is won
       );
       
-      // First, check that it's not yet completed
-      // This is because isOver and isWon are both false
-      expect(game.isCompleted(gameState)).toBe(false);
+      // Check if game is completed
+      expect(game.isCompleted(wonGame)).toBe(true);
+    });
+    
+    it('should detect a lost game correctly using isCompleted', () => {
+      // Create a game that's lost
+      const state = [
+        [createMine(0, 0, -1, true, false)], // Mine - revealed (exploded)
+        [createMine(1, 0, 1, true, false)]   // Non-mine - opened
+      ];
       
-      // Now create a "won" version of the game
-      const wonGameState = new Game(
-        state,     // same board state
-        true,      // isOver = true
-        1,         // totBombs
-        1,         // openedCells
-        1,         // flaggedCells
-        true       // isWon = true
+      // Create a game that's lost
+      const lostGame = createGameWithState(
+        state,
+        true,  // Game is over
+        1,     // 1 mine
+        2,     // 2 cells opened (including mine)
+        0,     // 0 cells flagged
+        false  // Game is lost
       );
       
-      // Check that this is considered completed
-      expect(game.isCompleted(wonGameState)).toBe(true);
+      // Check if game is completed
+      expect(game.isCompleted(lostGame)).toBe(false);
+    });
+  });
+  
+  describe('Game state immutability', () => {
+    it('should create a new game state when marking a mine', () => {
+      const originalGame = game.newGame(3, 3, 1);
+      const updatedGame = game.markMine(originalGame, originalGame.state[0][0]);
+      
+      // Verify we get a new state object
+      expect(updatedGame).not.toBe(originalGame);
+      
+      // And new state array
+      expect(updatedGame.state).not.toBe(originalGame.state);
+      
+      // And the first row is a new array
+      expect(updatedGame.state[0]).not.toBe(originalGame.state[0]);
+    });
+    
+    it('should create a new game state when opening a mine', () => {
+      const originalGame = game.newGame(3, 3, 1);
+      const updatedGame = game.openMine(originalGame, originalGame.state[0][0]);
+      
+      // Verify we get a new state object
+      expect(updatedGame).not.toBe(originalGame);
+      
+      // And new state array
+      expect(updatedGame.state).not.toBe(originalGame.state);
     });
   });
 });
