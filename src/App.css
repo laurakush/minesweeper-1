@@ -217,3 +217,53 @@
 .flag {
   color: #ff0000;
 }
+
+.game-result {
+  margin: 20px 0;
+  padding: 15px 30px;
+  border-radius: 8px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in;
+  background-color: #f5f5f5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 400px;
+}
+
+.game-result h2 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.game-result p {
+  margin-bottom: 10px;
+}
+
+.win {
+  background-color: #e6f7e6;
+  border: 2px solid #4CAF50;
+}
+
+.win h2 {
+  color: #2E7D32;
+}
+
+.lose {
+  background-color: #ffebee;
+  border: 2px solid #F44336;
+}
+
+.lose h2 {
+  color: #C62828;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
