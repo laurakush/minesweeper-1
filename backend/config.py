@@ -20,25 +20,3 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
     JWT_ACCESS_TOKEN_EXPIRES = 5  # Short expiration for testing
-    
-# Update create_app in app.py to accept config_class parameter
-# app.py modification below (reference only, full app.py updates would be made separately)
-"""
-def create_app(config_class=Config):
-    # Initialize Flask app
-    app = Flask(__name__)
-    app.config.from_object(config_class)
-    
-    # Initialize extensions
-    db.init_app(app)
-    ...
-"""
-
-# backend/tests/__init__.py
-# Empty init file to make the tests directory a package
-
-# backend/pytest.ini
-[pytest]
-testpaths = tests
-python_files = test_*.py
-python_functions = test_*

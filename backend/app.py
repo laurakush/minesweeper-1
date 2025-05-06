@@ -10,7 +10,16 @@ from routes import api
 def create_app(config_class=Config):
     # Initialize Flask app
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    
+    # Handle either string or object configuration
+    if isinstance(config_class, str):
+        if config_class == "testing":
+            from config import TestingConfig
+            app.config.from_object(TestingConfig)
+        else:
+            app.config.from_object(Config)
+    else:
+        app.config.from_object(config_class)
     
     # Initialize extensions
     db.init_app(app)
