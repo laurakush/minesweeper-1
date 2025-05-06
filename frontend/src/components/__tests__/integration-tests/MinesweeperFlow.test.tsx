@@ -123,7 +123,7 @@ describe('Minesweeper App Integration Flow', () => {
       access_token: 'token123'
     });
     
-    const submitButton = screen.getByRole('button', { type: 'submit' });
+    const submitButton = screen.getByRole('button', { name: 'Login' });
     
     await act(async () => {
       fireEvent.click(submitButton);

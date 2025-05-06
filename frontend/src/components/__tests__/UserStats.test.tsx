@@ -46,7 +46,7 @@ describe('UserStats Component', () => {
     ]
   };
   
-  jest.mock('../gameLogic/time', () => ({
+  jest.mock('../../gameLogic/time', () => ({
     time: {
       timer: jest.fn().mockImplementation((seconds) => {
         const minutes = Math.floor(seconds / 60);
