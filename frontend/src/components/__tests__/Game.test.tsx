@@ -1,9 +1,21 @@
-// src/components/__tests__/Game.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import Game from '../Game';
 import { DifficultyLevel } from '../GameControls';
 import { game } from '../../gameLogic/game';
+import { authAPI, gameStatsAPI } from '../../api/api';
+
+// Mock the API modules
+jest.mock('../../api/api', () => ({
+  authAPI: {
+    isAuthenticated: jest.fn().mockReturnValue(true),
+    getCurrentUser: jest.fn(),
+    logout: jest.fn()
+  },
+  gameStatsAPI: {
+    saveGameStats: jest.fn().mockResolvedValue({ success: true })
+  }
+}));
 
 // Mock the game module
 jest.mock('../../gameLogic/game', () => ({
@@ -11,7 +23,7 @@ jest.mock('../../gameLogic/game', () => ({
     newGame: jest.fn(),
     openMine: jest.fn(),
     markMine: jest.fn(),
-    countFlagged: jest.fn(),
+    countFlagged: jest.fn().mockReturnValue(0),
     isCompleted: jest.fn()
   }
 }));
@@ -64,9 +76,6 @@ describe('Game Component', () => {
         newState.flaggedCells - 1;
       return newState;
     });
-    
-    // Mock countFlagged
-    (game.countFlagged as jest.Mock).mockReturnValue(0);
   });
   
   it('renders the game with default props', () => {
@@ -257,5 +266,35 @@ describe('Game Component', () => {
     
     // Cleanup
     jest.useRealTimers();
+  });
+  
+  it('saves game stats when game is over', () => {
+    // Mock a game that's over
+    const gameOverState = {
+      ...mockGameState,
+      isOver: true,
+      isWon: true
+    };
+    
+    (game.newGame as jest.Mock).mockReturnValue(gameOverState);
+    (authAPI.isAuthenticated as jest.Mock).mockReturnValue(true);
+    
+    render(
+      <Game 
+        initialRows={9} 
+        initialCols={9} 
+        initialMines={10} 
+        initialDifficulty={DifficultyLevel.EASY} 
+      />
+    );
+    
+    // Check that saveGameStats was called
+    expect(gameStatsAPI.saveGameStats).toHaveBeenCalledTimes(1);
+    expect(gameStatsAPI.saveGameStats).toHaveBeenCalledWith(
+      expect.objectContaining({
+        difficulty: DifficultyLevel.EASY,
+        is_win: true
+      })
+    );
   });
 });
