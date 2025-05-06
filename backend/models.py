@@ -56,5 +56,3 @@ class GameStats(db.Model):
             'cells_opened': self.cells_opened,
             'played_at': self.played_at.isoformat() if self.played_at else None
         }
-
-# This could be expanded with other tables like Leaderboards, Achievements, etc.
