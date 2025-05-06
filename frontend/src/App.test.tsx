@@ -4,5 +4,5 @@ import App from './App';
 
 test('renders App component', () => {
     render(<App />);
-    expect(screen.getByText(/Minesweeper/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
   });
