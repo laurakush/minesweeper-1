@@ -13,8 +13,8 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship with GameStats
-    game_stats = db.relationship('GameStats', backref='user', lazy=True)
-    
+    game_stats = db.relationship('GameStats', backref='user', lazy=True, 
+                                 cascade="all, delete-orphan")    
     def __repr__(self):
         return f'<User {self.username}>'
     

@@ -23,7 +23,7 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
     JWTManager(app)
     Bcrypt(app)
     

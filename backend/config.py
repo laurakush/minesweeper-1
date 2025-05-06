@@ -19,4 +19,5 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
-    JWT_ACCESS_TOKEN_EXPIRES = 5  # Short expiration for testing
+    JWT_ACCESS_TOKEN_EXPIRES = 300  # Increase to 5 minutes for testing
+    JWT_ALGORITHM = 'HS256'  # Explicitly set algorithm
