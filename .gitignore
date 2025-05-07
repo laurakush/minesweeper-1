@@ -33,3 +33,5 @@ backend/ms_env/
 
 # Environment variables
 backend/.env
+frontend/.env.development
+frontend/.env.production

@@ -162,3 +162,21 @@ def get_user_stats_summary():
         'win_rate': round(win_rate, 2),
         'best_times': best_times
     }), 200
+
+# ===== Refresh Route =====
+@api.route('/refresh', methods=['POST'])
+@jwt_required()
+def refresh():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Generate a new access token
+    access_token = create_access_token(identity=user.id)
+    
+    return jsonify({
+        'message': 'Token refreshed successfully',
+        'access_token': access_token
+    }), 200

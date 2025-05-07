@@ -1,20 +1,49 @@
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-// Helper to handle response and errors
+const isTokenExpired = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    const { exp } = JSON.parse(jsonPayload);
+    return exp * 1000 < Date.now();
+  } catch (e) {
+    console.error('Error checking token expiration', e);
+    return true;
+  }
+};
+
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Something went wrong');
+    if (response.status === 422) {
+      const token = getToken();
+      if (token && isTokenExpired(token)) {
+        try {
+          await authAPI.refreshToken();
+        } catch (refreshError) {
+          authAPI.logout();
+          throw new Error('Session expired. Please log in again.');
+        }
+      }
+    }
+    
+    try {
+      const error = await response.json();
+      throw new Error(error.error || `API error: ${response.status}`);
+    } catch (e) {
+      throw new Error(`API error: ${response.status} - ${response.statusText}`);
+    }
   }
   return response.json();
 };
 
-// Auth token management
 const getToken = () => localStorage.getItem('token');
 const setToken = (token) => localStorage.setItem('token', token);
 const removeToken = () => localStorage.removeItem('token');
 
-// Headers with auth token
 const getHeaders = () => {
   const headers = {
     'Content-Type': 'application/json',
@@ -28,7 +57,6 @@ const getHeaders = () => {
   return headers;
 };
 
-// Auth API
 export const authAPI = {
   register: async (userData) => {
     const response = await fetch(`${API_URL}/register`, {
@@ -70,12 +98,31 @@ export const authAPI = {
     return handleResponse(response);
   },
   
+  refreshToken: async () => {
+    const response = await fetch(`${API_URL}/refresh`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    
+    const data = await handleResponse(response);
+    setToken(data.access_token);
+    return data;
+  },
+  
   isAuthenticated: () => {
-    return !!getToken();
+    const token = getToken();
+    if (!token) return false;
+    
+    try {
+      const parts = token.split('.');
+      return parts.length === 3 && !isTokenExpired(token);
+    } catch (e) {
+      console.error('Invalid token format', e);
+      return false;
+    }
   },
 };
 
-// Game stats API
 export const gameStatsAPI = {
   saveGameStats: async (gameData) => {
     const response = await fetch(`${API_URL}/game-stats`, {
@@ -109,4 +156,4 @@ const api = {
   gameStats: gameStatsAPI,
 };
 
-export default api; 
+export default api;
