@@ -45,6 +45,29 @@ const Game: React.FC<GameProps> = ({
     return () => clearInterval(timerId);
   }, [gameState]);
 
+    // Save game stats to backend when game ends
+    const saveGameStats = useCallback(() => {
+      // Only save if user is authenticated
+      if (authAPI.isAuthenticated() && gameState.isOver && !savedGame) {
+        const gameData = {
+          difficulty: currentDifficulty,
+          time_taken: elapsedSeconds,
+          is_win: gameState.isWon,
+          mines_flagged: flaggedCount,
+          cells_opened: gameState.openedCells
+        };
+        
+        gameStatsAPI.saveGameStats(gameData)
+          .then(() => {
+            console.log('Game stats saved successfully');
+            setSavedGame(true);
+          })
+          .catch(error => {
+            console.error('Failed to save game stats:', error);
+          });
+      }
+    }, [gameState, currentDifficulty, elapsedSeconds, flaggedCount, savedGame]);
+
   // Update state after each move
   useEffect(() => {
     setFlaggedCount(game.countFlagged(gameState));
@@ -53,30 +76,8 @@ const Game: React.FC<GameProps> = ({
     if (gameState.isOver && !savedGame) {
       saveGameStats();
     }
-  }, [gameState, savedGame]);
+  }, [gameState, saveGameStats, savedGame]);
 
-  // Save game stats to backend when game ends
-  const saveGameStats = useCallback(() => {
-    // Only save if user is authenticated
-    if (authAPI.isAuthenticated() && gameState.isOver && !savedGame) {
-      const gameData = {
-        difficulty: currentDifficulty,
-        time_taken: elapsedSeconds,
-        is_win: gameState.isWon,
-        mines_flagged: flaggedCount,
-        cells_opened: gameState.openedCells
-      };
-      
-      gameStatsAPI.saveGameStats(gameData)
-        .then(() => {
-          console.log('Game stats saved successfully');
-          setSavedGame(true);
-        })
-        .catch(error => {
-          console.error('Failed to save game stats:', error);
-        });
-    }
-  }, [gameState, currentDifficulty, elapsedSeconds, flaggedCount, savedGame]);
 
   // Left click handler - reveal cell
   const handleLeftClick = useCallback((field: Mine) => {
