@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { gameStatsAPI } from '../../api/api';
+import { authAPI } from '../../api/api';
 import { time } from '../../gameLogic/time';
 import '../../styles//UserStats.css';
 
@@ -35,6 +36,13 @@ const UserStats: React.FC = () => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
+        
+        // Check if we're authenticated before making requests
+        if (!authAPI.isAuthenticated()) {
+          setError('You need to log in to view statistics.');
+          setIsLoading(false);
+          return;
+        }
         
         // Fetch summary stats
         const summaryData = await gameStatsAPI.getStatsSummary();

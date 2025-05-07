@@ -1,8 +1,12 @@
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const isTokenExpired = (token) => {
+  if (!token) return true;
+  
   try {
     const base64Url = token.split('.')[1];
+    if (!base64Url) return true;
+    
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);

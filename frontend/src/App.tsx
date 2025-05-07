@@ -22,15 +22,23 @@ const App: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsLoading(true);
         if (authAPI.isAuthenticated()) {
-          // Verify token is valid by fetching current user
-          await authAPI.getCurrentUser();
-          setIsLoggedIn(true);
+          try {
+            // Verify token is valid by fetching current user
+            await authAPI.getCurrentUser();
+            setIsLoggedIn(true);
+          } catch (error) {
+            // Token might be expired or invalid
+            console.error("Auth check failed:", error);
+            authAPI.logout();
+            setIsLoggedIn(false);
+          }
+        } else {
+          setIsLoggedIn(false);
         }
       } catch (error) {
-        // Token might be expired or invalid
-        console.error("Auth check failed:", error);
-        authAPI.logout();
+        console.error("Auth check error:", error);
         setIsLoggedIn(false);
       } finally {
         setIsLoading(false);
