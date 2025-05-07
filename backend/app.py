@@ -23,8 +23,7 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
-    JWTManager(app)
+    CORS(app, resources={r"/api/*": {"origins": ["https://minesweeperwinner.netlify.app/", "http://localhost:3000"]}}, supports_credentials=True)    JWTManager(app)
     Bcrypt(app)
     
     # Register blueprints
