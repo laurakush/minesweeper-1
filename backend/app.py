@@ -23,9 +23,9 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": ["https://minesweeperwinner.netlify.app", "http://localhost:3000"]}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": ["https://minesweeperwinner.netlify.app", "http://localhost:3000"]}}, supports_credentials=True)
     Bcrypt(app)
-    
+
     # Register blueprints
     app.register_blueprint(api, url_prefix='/api')
     
@@ -38,6 +38,12 @@ def create_app(config_class=Config):
         return {'message': 'Minesweeper API is running'}
     
     return app
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
     
 if __name__ == '__main__':
     app = create_app()
