@@ -104,7 +104,9 @@ export const gameStatsAPI = {
   },
 };
 
-export default {
+const api = {
   auth: authAPI,
   gameStats: gameStatsAPI,
 };
+
+export default api; 

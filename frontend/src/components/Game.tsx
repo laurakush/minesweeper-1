@@ -53,7 +53,7 @@ const Game: React.FC<GameProps> = ({
     if (gameState.isOver && !savedGame) {
       saveGameStats();
     }
-  }, [gameState]);
+  }, [gameState, savedGame]);
 
   // Save game stats to backend when game ends
   const saveGameStats = useCallback(() => {

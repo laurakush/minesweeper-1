@@ -52,11 +52,6 @@ const App: React.FC = () => {
     setCurrentView('game');
   };
   
-  // Toggle between game and stats view
-  const toggleView = () => {
-    setCurrentView(currentView === 'game' ? 'stats' : 'game');
-  };
-  
   // Show loading screen while checking authentication
   if (isLoading) {
     return <div className="loading-screen">Loading...</div>;
