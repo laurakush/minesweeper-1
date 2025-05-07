@@ -23,8 +23,7 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": ["https://minesweeperwinner.netlify.app/", "http://localhost:3000"]}}, supports_credentials=True)
-    Bcrypt(app)
+    CORS(app, resources={r"/api/*": {"origins": ["https://minesweeperwinner.netlify.app", "http://localhost:3000"]}}, supports_credentials=True)    Bcrypt(app)
     
     # Register blueprints
     app.register_blueprint(api, url_prefix='/api')
