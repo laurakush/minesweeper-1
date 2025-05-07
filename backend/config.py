@@ -1,8 +1,6 @@
 import os
 
 class Config:
-    print(f"Available environment variables: {list(os.environ.keys())}")
-    print(f"DATABASE_URL value: {os.environ.get('DATABASE_URL')}")
     # Database Configuration    
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'mysql+pymysql://username:password@localhost/minesweeper')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
