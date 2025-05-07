@@ -26,6 +26,9 @@ def create_app(config_class=Config):
     CORS(app, resources={r"/*": {"origins": ["https://minesweeperwinner.netlify.app", "http://localhost:3000"]}}, supports_credentials=True)
     Bcrypt(app)
 
+    # Initialize JWT manager
+    jwt = JWTManager(app)
+
     # Register blueprints
     app.register_blueprint(api, url_prefix='/api')
     
