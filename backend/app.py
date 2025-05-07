@@ -38,12 +38,6 @@ def create_app(config_class=Config):
         return {'message': 'Minesweeper API is running'}
     
     return app
-
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    return response
     
 if __name__ == '__main__':
     app = create_app()
