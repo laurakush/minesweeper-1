@@ -34,12 +34,8 @@ const handleResponse = async (response) => {
       }
     }
     
-    try {
-      const error = await response.json();
-      throw new Error(error.error || `API error: ${response.status}`);
-    } catch (e) {
-      throw new Error(`API error: ${response.status} - ${response.statusText}`);
-    }
+    const error = await response.json();
+    throw new Error(error.error || `API error: ${response.status}`);
   }
   return response.json();
 };
