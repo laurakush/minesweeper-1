@@ -43,7 +43,8 @@ def register():
     db.session.commit()
     
     # Generate access token
-    access_token = create_access_token(identity=new_user.id)
+    str_id = str(new_user.id)
+    access_token = create_access_token(identity=str_id)
     
     return jsonify({
         'message': 'User registered successfully',
@@ -65,7 +66,8 @@ def login():
         return jsonify({'error': 'Invalid username or password'}), 401
     
     # Generate access token
-    access_token = create_access_token(identity=user.id)
+    str_id = str(user.id)
+    access_token = create_access_token(identity=str_id)
     
     return jsonify({
         'message': 'Login successful',
@@ -174,7 +176,8 @@ def refresh():
         return jsonify({'error': 'User not found'}), 404
     
     # Generate a new access token
-    access_token = create_access_token(identity=user.id)
+    str_id = str(user.id)
+    access_token = create_access_token(identity=str_id)
     
     return jsonify({
         'message': 'Token refreshed successfully',
